@@ -16,6 +16,13 @@ app.get("/todos", async (c) => {
   return c.json(todos);
 });
 
+app.post("/users", async (c) => {
+  const { name } = await c.req.json();
+  await sql`INSERT INTO users (name) VALUES (${name})`;
+  c.status(202);
+  return c.body("Accepted");
+});
+
 app.get("/hello/*", redisCacheMiddleware);
 
 app.get("/hello/:name", async (c) => {
