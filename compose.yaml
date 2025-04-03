@@ -25,6 +25,8 @@ services:
       - 4321:4321
     depends_on:
       - server
+    labels:
+      - "traefik.enable=false"
 
   k6-tests:
     entrypoint: "/bin/true"
@@ -33,6 +35,8 @@ services:
       - ./k6-tests/tests:/tests
     depends_on:
       - client
+    labels:
+      - "traefik.enable=false"
 
   database:
     container_name: postgresql_database
@@ -44,6 +48,8 @@ services:
       postgres
       -c shared_preload_libraries=auto_explain,pg_stat_statements
       -c auto_explain.log_min_duration=10
+    labels:
+      - "traefik.enable=false"
 
   database-migrations:
     image: flyway/flyway:10
@@ -54,9 +60,25 @@ services:
     volumes:
       - ./database-migrations:/flyway/sql
     command: -connectRetries=60 -baselineOnMigrate=true migrate
+    labels:
+      - "traefik.enable=false"
 
   redis:
     image: redis:7.4.2
     command: redis-server /usr/local/etc/redis/redis.conf
     volumes:
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    labels:
+      - "traefik.enable=false"
+
+  traefik:
+    image: traefik:v3.3
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:8000"
+    ports:
+      - "8080:8080"
+      - "8000:8000"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
